@@ -67,6 +67,7 @@ async def generate_video(
         prompt=request.prompt,
         duration=request.duration,
         upscale=request.upscale,
+        pro=request.pro,
         speaker_wav=request.speaker_wav,
         language=request.language,
         seed=request.seed,

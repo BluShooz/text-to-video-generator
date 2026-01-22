@@ -26,6 +26,10 @@ class GenerateRequest(BaseModel):
         default=False,
         description="Whether to upscale output to HD"
     )
+    pro: bool = Field(
+        default=True,
+        description="Whether to use SOTA Pro-Level pipeline (LTX-Video + MuseTalk + LivePortrait)"
+    )
     speaker_wav: Optional[str] = Field(
         default=None,
         description="Path to voice reference audio for cloning"
@@ -46,6 +50,7 @@ class GenerateRequest(BaseModel):
                     "prompt": "Hello! Welcome to our demonstration of AI-powered video generation.",
                     "duration": 6,
                     "upscale": True,
+                    "pro": True,
                     "language": "en"
                 }
             ]

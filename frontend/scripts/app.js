@@ -50,7 +50,8 @@ class VideoGenerator {
             prompt: formData.get('prompt'),
             duration: parseInt(formData.get('duration')),
             language: formData.get('language'),
-            upscale: formData.get('upscale') === 'on',
+            upscale: document.getElementById('upscale').checked,
+            pro: document.getElementById('pro').checked,
         };
 
         // Disable form

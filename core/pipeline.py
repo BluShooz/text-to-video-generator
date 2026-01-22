@@ -18,9 +18,9 @@ from core.config import get_config
 from core.utils import (
     generate_job_id, ensure_dir, clean_temp_files, clear_gpu_memory
 )
-from modules.video_generator import CogVideoGenerator
+from modules.video_generator import CogVideoGenerator, LTXVideoGenerator, LivePortraitGenerator
 from modules.tts import XTTSGenerator
-from modules.lip_sync import Wav2LipSync
+from modules.lip_sync import Wav2LipSync, MuseTalkSync
 from modules.upscaler import RealESRGANUpscaler
 
 
@@ -51,6 +51,7 @@ class GenerationJob:
     # Generation options
     duration: int = 6
     upscale: bool = False
+    pro: bool = False  # Enable SOTA pipeline (LTX-Video + MuseTalk + LivePortrait)
     speaker_wav: Optional[str] = None
     language: str = "en"
     seed: Optional[int] = None
@@ -71,17 +72,28 @@ class TextToVideoPipeline:
         self.config = get_config()
         self.jobs: Dict[str, GenerationJob] = {}
         
-        # Lazy-loaded modules
+        # Lazy-loaded modules (Baseline)
         self._video_generator: Optional[CogVideoGenerator] = None
         self._tts_generator: Optional[XTTSGenerator] = None
         self._lip_syncer: Optional[Wav2LipSync] = None
         self._upscaler: Optional[RealESRGANUpscaler] = None
+        
+        # Lazy-loaded modules (Pro SOTA)
+        self._ltx_generator: Optional[LTXVideoGenerator] = None
+        self._musetalk_syncer: Optional[MuseTalkSync] = None
+        self._liveportrait_generator: Optional[LivePortraitGenerator] = None
     
     @property
     def video_generator(self) -> CogVideoGenerator:
         if self._video_generator is None:
             self._video_generator = CogVideoGenerator()
         return self._video_generator
+
+    @property
+    def ltx_generator(self) -> LTXVideoGenerator:
+        if self._ltx_generator is None:
+            self._ltx_generator = LTXVideoGenerator()
+        return self._ltx_generator
     
     @property
     def tts_generator(self) -> XTTSGenerator:
@@ -94,6 +106,18 @@ class TextToVideoPipeline:
         if self._lip_syncer is None:
             self._lip_syncer = Wav2LipSync()
         return self._lip_syncer
+
+    @property
+    def musetalk_syncer(self) -> MuseTalkSync:
+        if self._musetalk_syncer is None:
+            self._musetalk_syncer = MuseTalkSync()
+        return self._musetalk_syncer
+
+    @property
+    def liveportrait_generator(self) -> LivePortraitGenerator:
+        if self._liveportrait_generator is None:
+            self._liveportrait_generator = LivePortraitGenerator()
+        return self._liveportrait_generator
     
     @property
     def upscaler(self) -> RealESRGANUpscaler:
@@ -106,6 +130,7 @@ class TextToVideoPipeline:
         prompt: str,
         duration: int = 6,
         upscale: bool = False,
+        pro: bool = True, # Default to Pro for SOTA performance
         speaker_wav: Optional[str] = None,
         language: str = "en",
         seed: Optional[int] = None,
@@ -116,6 +141,7 @@ class TextToVideoPipeline:
             prompt=prompt,
             duration=duration,
             upscale=upscale,
+            pro=pro,
             speaker_wav=speaker_wav,
             language=language,
             seed=seed,
@@ -175,26 +201,38 @@ class TextToVideoPipeline:
             if progress_callback:
                 progress_callback(job)
             
+            
             raw_video_path = temp_dir / "raw_video.mp4"
             
             def video_progress(step: int, total: int):
-                job.progress = (step / total) * 25  # 0-25%
+                job.progress = (step / total) * 20  # 0-20%
                 if progress_callback:
                     progress_callback(job)
             
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.video_generator.generate_to_file(
-                    prompt=job.prompt,
-                    output_path=raw_video_path,
-                    num_frames=job.duration * 8,  # 8 fps
-                    seed=job.seed,
-                    progress_callback=video_progress,
+            if job.pro:
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.ltx_generator.generate_to_file(
+                        prompt=job.prompt,
+                        output_path=raw_video_path,
+                        num_frames=job.duration * 24, # LTX typically at higher FPS
+                        seed=job.seed,
+                        progress_callback=video_progress,
+                    )
                 )
-            )
-            
-            # Free video generator memory
-            self.video_generator.unload_model()
+                self.ltx_generator.unload_model()
+            else:
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.video_generator.generate_to_file(
+                        prompt=job.prompt,
+                        output_path=raw_video_path,
+                        num_frames=job.duration * 8,  # 8 fps
+                        seed=job.seed,
+                        progress_callback=video_progress,
+                    )
+                )
+                self.video_generator.unload_model()
             clear_gpu_memory()
             
             # ==================== STEP 2: Generate Audio ====================
@@ -219,7 +257,7 @@ class TextToVideoPipeline:
                 )
             )
             
-            job.progress = 50.0
+            job.progress = 40.0
             if progress_callback:
                 progress_callback(job)
             
@@ -239,21 +277,62 @@ class TextToVideoPipeline:
             
             synced_video_path = temp_dir / "synced_video.mp4"
             
-            await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.lip_syncer.synchronize(
-                    video_path=raw_video_path,
-                    audio_path=audio_path,
-                    output_path=synced_video_path,
+            if job.pro:
+                # Pro Pipeline: MuseTalk then LivePortrait
+                self._update_job(
+                    job,
+                    status=JobStatus.LIP_SYNCING,
+                    progress=40.0,
+                    step="High-fidelity lip-syncing (MuseTalk)..."
                 )
-            )
+                if progress_callback:
+                    progress_callback(job)
+                    
+                musetalk_output = temp_dir / "musetalk_video.mp4"
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.musetalk_syncer.synchronize(
+                        video_path=raw_video_path,
+                        audio_path=audio_path,
+                        output_path=musetalk_output,
+                    )
+                )
+                self.musetalk_syncer.unload_model()
+                clear_gpu_memory()
+                
+                self._update_job(
+                    job,
+                    status=JobStatus.LIP_SYNCING,
+                    progress=60.0,
+                    step="Facial animation refinement (LivePortrait)..."
+                )
+                if progress_callback:
+                    progress_callback(job)
+                
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.liveportrait_generator.animate(
+                        source_path=str(raw_video_path),
+                        driving_path=str(musetalk_output),
+                        output_path=str(synced_video_path),
+                    )
+                )
+                # Note: cleanup musetalk_output or use it as intermediate
+            else:
+                await asyncio.get_event_loop().run_in_executor(
+                    None,
+                    lambda: self.lip_syncer.synchronize(
+                        video_path=raw_video_path,
+                        audio_path=audio_path,
+                        output_path=synced_video_path,
+                    )
+                )
+                self.lip_syncer.unload_model()
             
-            job.progress = 75.0
+            job.progress = 80.0
             if progress_callback:
                 progress_callback(job)
             
-            # Free lip sync memory
-            self.lip_syncer.unload_model()
             clear_gpu_memory()
             
             # ==================== STEP 4: Upscale (Optional) ====================
@@ -270,7 +349,7 @@ class TextToVideoPipeline:
                 final_output = config.outputs_dir / f"{job.job_id}_final_HD.mp4"
                 
                 def upscale_progress(current: int, total: int):
-                    job.progress = 75 + (current / total) * 25  # 75-100%
+                    job.progress = 80 + (current / total) * 20  # 80-100%
                     if progress_callback:
                         progress_callback(job)
                 
@@ -363,7 +442,8 @@ def get_pipeline() -> TextToVideoPipeline:
 # Convenience function
 def generate_video_with_lipsync(
     prompt: str,
-    upscale: bool = False,
+    upscale: bool = True,
+    pro: bool = True,
     speaker_wav: Optional[str] = None,
     language: str = "en",
 ) -> Path:
@@ -383,6 +463,7 @@ def generate_video_with_lipsync(
     return pipeline.generate_sync(
         prompt=prompt,
         upscale=upscale,
+        pro=pro,
         speaker_wav=speaker_wav,
         language=language,
     )
