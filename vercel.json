@@ -1,27 +1,11 @@
 {
     "version": 2,
-    "builds": [
+    "buildCommand": "echo 'Static frontend - no build required'",
+    "outputDirectory": "frontend",
+    "rewrites": [
         {
-            "src": "frontend/**",
-            "use": "@vercel/static"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/static/(.*)",
-            "dest": "/frontend/$1"
-        },
-        {
-            "src": "/(.*\\.css)",
-            "dest": "/frontend/styles/$1"
-        },
-        {
-            "src": "/(.*\\.js)",
-            "dest": "/frontend/scripts/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/frontend/index.html"
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ],
     "headers": [
@@ -35,10 +19,6 @@
                 {
                     "key": "X-Frame-Options",
                     "value": "DENY"
-                },
-                {
-                    "key": "X-XSS-Protection",
-                    "value": "1; mode=block"
                 }
             ]
         }
