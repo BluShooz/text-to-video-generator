@@ -1,0 +1,30 @@
+{
+    "name": "text-to-video-generator",
+    "version": "1.0.0",
+    "description": "AI-powered text-to-video generation with neural lip-sync",
+    "main": "frontend/scripts/app.js",
+    "scripts": {
+        "dev": "uvicorn api.main:app --reload --host 0.0.0.0 --port 8000",
+        "start": "uvicorn api.main:app --host 0.0.0.0 --port 8000",
+        "build": "echo 'No build step required for static frontend'"
+    },
+    "keywords": [
+        "text-to-video",
+        "ai",
+        "video-generation",
+        "lip-sync",
+        "tts",
+        "cogvideo",
+        "wav2lip"
+    ],
+    "author": "Text-to-Video Generator Team",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/yourusername/text-to-video-generator.git"
+    },
+    "bugs": {
+        "url": "https://github.com/yourusername/text-to-video-generator/issues"
+    },
+    "homepage": "https://text-to-video-generator.vercel.app"
+}
