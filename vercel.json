@@ -1,26 +1,7 @@
 {
     "version": 2,
-    "buildCommand": "echo 'Static frontend - no build required'",
-    "outputDirectory": "frontend",
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ],
-    "headers": [
-        {
-            "source": "/(.*)",
-            "headers": [
-                {
-                    "key": "X-Content-Type-Options",
-                    "value": "nosniff"
-                },
-                {
-                    "key": "X-Frame-Options",
-                    "value": "DENY"
-                }
-            ]
-        }
-    ]
+    "framework": null,
+    "buildCommand": null,
+    "installCommand": "echo 'Static site - skipping install'",
+    "outputDirectory": "frontend"
 }
