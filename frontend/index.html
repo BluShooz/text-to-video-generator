@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Text to Video Generator | AI-Powered Lip-Sync Videos</title>
-    <meta name="description" content="Generate professional AI videos with lip-sync from text prompts.">
+    <meta name="description"
+        content="Generate professional AI videos with lip-sync from text prompts. Powered by CogVideoX, XTTS-v2, Wav2Lip and Real-ESRGAN.">
+    <meta name="keywords" content="text to video, AI video generator, lip sync, TTS, video generation">
+    <meta property="og:title" content="Text to Video Generator | AI-Powered Lip-Sync Videos">
+    <meta property="og:description"
+        content="Transform text prompts into professional talking-head videos with accurate lip synchronization.">
+    <meta property="og:type" content="website">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles/main.css">
 </head>
+
 <body>
     <div class="app">
         <!-- Background Effects -->
         <div class="bg-gradient"></div>
         <div class="bg-grid"></div>
-        
+
         <!-- Header -->
         <header class="header">
             <div class="logo">
@@ -23,11 +31,13 @@
                 <span class="logo-text">TextToVideo<span class="logo-accent">.ai</span></span>
             </div>
             <nav class="nav">
-                <a href="#" class="nav-link active">Generate</a>
-                <a href="/docs" class="nav-link">API Docs</a>
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="https://github.com/BluShooz/text-to-video-generator" target="_blank"
+                    class="nav-link">GitHub</a>
             </nav>
         </header>
-        
+
         <!-- Main Content -->
         <main class="main">
             <!-- Hero Section -->
@@ -37,13 +47,38 @@
                     <span class="gradient-text">Video</span>
                 </h1>
                 <p class="hero-subtitle">
-                    AI-powered video generation with neural lip-sync. 
+                    AI-powered video generation with neural lip-sync.
                     Create professional talking-head videos in seconds.
                 </p>
+                <div class="hero-badges">
+                    <span class="badge">🎬 CogVideoX</span>
+                    <span class="badge">🎤 XTTS-v2</span>
+                    <span class="badge">👄 Wav2Lip</span>
+                    <span class="badge">📺 Real-ESRGAN</span>
+                </div>
             </section>
-            
-            <!-- Generator Form -->
-            <section class="generator">
+
+            <!-- Demo Form -->
+            <section class="generator" id="demo">
+                <div class="demo-notice">
+                    <div class="notice-icon">🖥️</div>
+                    <div class="notice-content">
+                        <h3>Self-Hosted Demo</h3>
+                        <p>This interface requires a GPU backend server. To run the full application:</p>
+                        <ol>
+                            <li>Clone the repository from GitHub</li>
+                            <li>Install Python dependencies</li>
+                            <li>Download model checkpoints</li>
+                            <li>Run <code>uvicorn api.main:app --reload</code></li>
+                        </ol>
+                        <a href="https://github.com/BluShooz/text-to-video-generator" target="_blank"
+                            class="btn btn-primary">
+                            <span class="btn-icon">📦</span>
+                            <span class="btn-text">Get Started on GitHub</span>
+                        </a>
+                    </div>
+                </div>
+
                 <form id="generateForm" class="form">
                     <!-- Prompt Input -->
                     <div class="form-group">
@@ -51,20 +86,14 @@
                             <span class="label-icon">💬</span>
                             What should the video say?
                         </label>
-                        <textarea 
-                            id="prompt" 
-                            name="prompt" 
-                            class="form-textarea"
+                        <textarea id="prompt" name="prompt" class="form-textarea"
                             placeholder="Enter your script here... e.g., 'Hello! Welcome to our AI demonstration. This technology is remarkable!'"
-                            rows="4"
-                            maxlength="1000"
-                            required
-                        ></textarea>
+                            rows="4" maxlength="1000"></textarea>
                         <div class="char-count">
                             <span id="charCount">0</span> / 1000
                         </div>
                     </div>
-                    
+
                     <!-- Options Grid -->
                     <div class="options-grid">
                         <!-- Duration -->
@@ -83,7 +112,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <!-- Language -->
                         <div class="form-group">
                             <label class="form-label" for="language">
@@ -105,7 +134,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <!-- Upscale Toggle -->
                         <div class="form-group">
                             <label class="form-label">
@@ -119,81 +148,160 @@
                             </label>
                         </div>
                     </div>
-                    
-                    <!-- Submit Button -->
-                    <button type="submit" class="btn btn-primary btn-generate" id="generateBtn">
-                        <span class="btn-icon">✨</span>
-                        <span class="btn-text">Generate Video</span>
+
+                    <!-- Submit Button (Disabled - demo only) -->
+                    <button type="button" class="btn btn-secondary btn-generate" disabled>
+                        <span class="btn-icon">⚡</span>
+                        <span class="btn-text">Requires Local GPU Server</span>
                     </button>
                 </form>
             </section>
-            
-            <!-- Progress Section (Hidden by default) -->
-            <section id="progressSection" class="progress-section hidden">
-                <div class="progress-card">
-                    <div class="progress-header">
-                        <h3 class="progress-title">Generating Your Video</h3>
-                        <span class="progress-status" id="progressStatus">Initializing...</span>
+
+            <!-- Features Section -->
+            <section class="features" id="features">
+                <h2 class="section-title">Powerful Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🎬</div>
+                        <h3>Text-to-Video</h3>
+                        <p>Generate video content from text descriptions using CogVideoX diffusion models.</p>
                     </div>
-                    
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎤</div>
+                        <h3>Neural TTS</h3>
+                        <p>High-quality speech synthesis with XTTS-v2 supporting 17 languages.</p>
                     </div>
-                    
-                    <div class="progress-steps">
-                        <div class="step" id="step1">
-                            <span class="step-icon">🎬</span>
-                            <span class="step-text">Video Generation</span>
+                    <div class="feature-card">
+                        <div class="feature-icon">👄</div>
+                        <h3>Lip Sync</h3>
+                        <p>Accurate lip synchronization using Wav2Lip GAN technology.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📺</div>
+                        <h3>HD Upscaling</h3>
+                        <p>4x video enhancement to 1080p with Real-ESRGAN AI upscaler.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎭</div>
+                        <h3>Voice Cloning</h3>
+                        <p>Clone any voice from just a 6-second audio sample.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚀</div>
+                        <h3>REST API</h3>
+                        <p>Production-ready FastAPI backend with async job processing.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section class="how-it-works" id="how-it-works">
+                <h2 class="section-title">How It Works</h2>
+                <div class="workflow">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Enter Your Text</h3>
+                            <p>Type or paste the script you want the video to speak.</p>
                         </div>
-                        <div class="step" id="step2">
-                            <span class="step-icon">🎤</span>
-                            <span class="step-text">Speech Synthesis</span>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>AI Processing</h3>
+                            <p>CogVideoX generates video, XTTS-v2 creates speech.</p>
                         </div>
-                        <div class="step" id="step3">
-                            <span class="step-icon">👄</span>
-                            <span class="step-text">Lip Sync</span>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Lip Sync</h3>
+                            <p>Wav2Lip synchronizes lip movements to the audio.</p>
                         </div>
-                        <div class="step" id="step4">
-                            <span class="step-icon">📺</span>
-                            <span class="step-text">Upscale</span>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Download</h3>
+                            <p>Get your professional lip-synced video!</p>
                         </div>
                     </div>
                 </div>
             </section>
-            
-            <!-- Result Section (Hidden by default) -->
-            <section id="resultSection" class="result-section hidden">
-                <div class="result-card">
-                    <div class="result-header">
-                        <h3 class="result-title">🎉 Your Video is Ready!</h3>
-                    </div>
-                    
-                    <div class="video-container">
-                        <video id="resultVideo" controls class="result-video">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    
-                    <div class="result-actions">
-                        <a id="downloadBtn" href="#" download class="btn btn-primary">
-                            <span class="btn-icon">⬇️</span>
-                            <span class="btn-text">Download Video</span>
-                        </a>
-                        <button id="newVideoBtn" class="btn btn-secondary">
-                            <span class="btn-icon">🔄</span>
-                            <span class="btn-text">Create New Video</span>
-                        </button>
-                    </div>
+
+            <!-- Requirements Section -->
+            <section class="requirements">
+                <h2 class="section-title">Hardware Requirements</h2>
+                <div class="requirements-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Configuration</th>
+                                <th>VRAM Required</th>
+                                <th>Recommended GPU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Minimum</td>
+                                <td>12GB</td>
+                                <td>RTX 3060</td>
+                            </tr>
+                            <tr>
+                                <td>Standard</td>
+                                <td>16GB</td>
+                                <td>RTX 4070</td>
+                            </tr>
+                            <tr class="highlighted">
+                                <td>Optimal</td>
+                                <td>24GB+</td>
+                                <td>RTX 4090, A100</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="cta">
+                <h2>Ready to Get Started?</h2>
+                <p>Clone the repository and start generating videos with AI!</p>
+                <div class="cta-buttons">
+                    <a href="https://github.com/BluShooz/text-to-video-generator" target="_blank"
+                        class="btn btn-primary">
+                        <span class="btn-icon">⭐</span>
+                        <span class="btn-text">Star on GitHub</span>
+                    </a>
+                    <a href="https://github.com/BluShooz/text-to-video-generator/archive/refs/heads/main.zip"
+                        class="btn btn-secondary">
+                        <span class="btn-icon">⬇️</span>
+                        <span class="btn-text">Download ZIP</span>
+                    </a>
                 </div>
             </section>
         </main>
-        
+
         <!-- Footer -->
         <footer class="footer">
-            <p>Powered by CogVideoX, XTTS-v2, Wav2Lip & Real-ESRGAN</p>
+            <div class="footer-content">
+                <p>Powered by CogVideoX, XTTS-v2, Wav2Lip & Real-ESRGAN</p>
+                <div class="footer-links">
+                    <a href="https://github.com/BluShooz/text-to-video-generator" target="_blank">GitHub</a>
+                    <span>•</span>
+                    <a href="https://github.com/BluShooz/text-to-video-generator/blob/main/LICENSE" target="_blank">MIT
+                        License</a>
+                    <span>•</span>
+                    <a href="https://github.com/BluShooz/text-to-video-generator/blob/main/CONTRIBUTING.md"
+                        target="_blank">Contributing</a>
+                </div>
+            </div>
         </footer>
     </div>
-    
+
     <script src="/static/scripts/app.js"></script>
 </body>
+
 </html>
