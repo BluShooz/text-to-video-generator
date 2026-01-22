@@ -1,0 +1,23 @@
+# Ignore Python backend (requires GPU server, not Vercel-compatible)
+requirements.txt
+api/
+core/
+modules/
+scripts/
+tests/
+*.py
+__pycache__/
+*.pth
+checkpoints/
+outputs/
+temp/
+
+# Docker files
+Dockerfile
+docker-compose.yml
+
+# Development files
+.env
+.env.example
+venv/
+.venv/
